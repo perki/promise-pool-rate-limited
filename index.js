@@ -11,7 +11,6 @@ function PromisePoolRL(next, poolSize) {
     let count = 0;
     let done = false;
     function goNext() {
-      console.log('* '+count);
       if (done) { 
         if (count === 0) resolve();
         return false;
@@ -23,7 +22,7 @@ function PromisePoolRL(next, poolSize) {
       return true;
     }
     // call goNext up to the poolSize
-    for (let i = 0; i < poolSize; i++) {
+    for (let i = 0; i <= poolSize; i++) {
       if (! goNext()) break; 
     }
   });
