@@ -1,6 +1,6 @@
 {
   "name": "promise-pool-rate-limited",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Promise pool with rate limiting",
   "node" : ">=18.0.0",
   "main": "index.js",
@@ -11,7 +11,8 @@
     "Promise",
     "Pool",
     "Rate",
-    "Limiting"
+    "Limiting",
+    "Concurency"
   ],
   "author": "Perki",
   "license": "BSD-3-Clause"
