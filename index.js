@@ -1,11 +1,28 @@
 /**
+ * @typedef {Object} ResultPromisePoolRL
+ * @property {number} executionTimeMs - The total execution time
+ * @property {number} startedCount - The total started calls
+ * @property {number} failCount - The number of failed calls
+ * @property {number} averageRateHz - The overal average rate of call per seconds
+ * @property {Number} remaingConcurentCalls - The number of calls not completed - always 0 on success
+ */
+
+/**
+ * @typedef {Function} OnErrorPromisePoolRL
+ * @param {Error} error - The error 
+ * @param {Promise} promise - The promise (async call which failed)
+ * @param {ResultPromisePoolRL} result - {executionTimeMs, startedCount, failCount, averageRateHz, remaingConcurentCalls}
+ * @return {boolean} if `true` calls will continues without failing
+ */
+
+/**
  * 
  * @param {Function} next when called returns a Promise or false when done;
  * @param {number} maxConcurent maximum size of the pool of running Promises
  * @param {Object} [options]
  * @param {number | null} [options.rateHz] maximum next() rate in Hz (call / second)
- * @param {Function} [options.onError] onError(error, promise) will be called when an error occurs. If not defined the process will stop.
- * @returns 
+ * @param {OnErrorPromisePoolRL} [options.onError] onError(error, promise) will be called when an error occurs. If not defined the process will stop.
+ * @returns {ResultPromisePoolRL} - {executionTimeMs, startedCount, failCount, averageRateHz, remaingConcurentCalls}
  */
 function PromisePoolRL(next, maxConcurent, options) {
   options = options || {};
@@ -27,10 +44,13 @@ function PromisePoolRL(next, maxConcurent, options) {
     function gotError(err, promise) {
       failCount++;
       if (options.onError !== undefined) {
-        const doNotFail = options.onError(err, promise);
+        const doNotFail = options.onError(err, promise, getResult());
         if (doNotFail) return true;
       } 
-      if (! rejected) reject(err);
+      if (! rejected) { 
+        err.promisePoolRLResult = getResult();
+        reject(err);
+      }
       rejected = true;
       return false;
     }
@@ -42,9 +62,7 @@ function PromisePoolRL(next, maxConcurent, options) {
       
       if (done || rejected) { 
         if (countConcurentCalls === 0 && ! rejected) {
-          const executionTimeMs = Date.now() - startTime;
-          const averageRateHz = 1000 * ( startedCount + failCount ) / executionTimeMs;
-          resolve({executionTimeMs, startedCount, failCount, averageRateHz});
+          resolve(getResult());
         }
         return false;
       }
@@ -107,6 +125,16 @@ function PromisePoolRL(next, maxConcurent, options) {
       if (! options.rateHz) return;
       if (durations.length > durationsMemorySize) durations.shift();
       durations.push(duration);
+    }
+
+    /**
+     * Get the result object, used by resolve and reject
+     * @returns {ResultPromisePoolRL}
+     */
+    function getResult() {
+      const executionTimeMs = Date.now() - startTime;
+      const averageRateHz = 1000 * ( startedCount + failCount ) / executionTimeMs;
+      return {executionTimeMs, startedCount, failCount, averageRateHz, remaingConcurentCalls: countConcurentCalls};
     }
   });
 }

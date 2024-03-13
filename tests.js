@@ -85,7 +85,7 @@ test('Reject catching Error and continuing', async (t) => {
   const entries = 10;
 
   let gotError = 0;
-  function onError(err, promise) {
+  function onError(err, promise, intermediateResult) {
     gotError++;
     if (promise.id !== 5) throw new Error('Expected to receive the failing promise');
     if (err.message !== 'Failing on 6th Promise') throw new Error(e);
@@ -98,7 +98,7 @@ test('Reject catching Error and continuing', async (t) => {
     if (id > entries) throw new Error('next() called too much');
     const p = async function () {
       startedEntries++;
-      // on the 5th promise throw an Error right away
+      // on the 6th promise throw an Error right away
       if (id === 5) {
         doneEntries++;
         throw new Error('Failing on 6th Promise');
