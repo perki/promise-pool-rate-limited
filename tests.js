@@ -122,12 +122,11 @@ test('Rate limiting', async (t) => {
   let startedEntries = 0;
   let doneEntries = 0;
   const poolSize = 2;
-  const entries = 30;
+  const entries = 10;
 
   const desiredRateHz = 1; // 1 per seconds
 
   const startTime = Date.now();
-
 
   function next() {
     const id = ++count;

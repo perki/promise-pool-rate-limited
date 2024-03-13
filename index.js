@@ -35,14 +35,13 @@ function PromisePoolRL(next, maxConcurent, options) {
 
     function goNext(startWithDelay) {
       if (done || rejected) { 
-        console.log({countConcurentCalls, rejected});
         if (countConcurentCalls === 0 && ! rejected) resolve();
         return false;
       }
 
-      // get next Promise to execute and return if false
+      // get next Promise to execute or goNext() if done to enventually resolve
       const n = next();
-      if (! n) { done = true; return false}
+      if (! n) { done = true; return goNext(); }
 
       countConcurentCalls++;
       async function nn () { // async function to be able to delay 
@@ -50,7 +49,6 @@ function PromisePoolRL(next, maxConcurent, options) {
         // --- rate limiting ---//
         if (options.rateHz) {
           const delay = (startWithDelay != null) ? startWithDelay : currentWait;
-          console.log({countConcurentCalls, delay, startWithDelay, currentWait});
           await new Promise((r) => { setTimeout(r, delay) });
         }
         totalCount++;
@@ -71,7 +69,7 @@ function PromisePoolRL(next, maxConcurent, options) {
     }
 
     // start by filling up the pool 
-    for (let i = 0; i <= maxConcurent; i++) {
+    for (let i = 0; i < maxConcurent; i++) {
       if (! goNext(i * currentWait)) break; 
     }
   });
