@@ -119,12 +119,10 @@ test('Reject catching Error and continuing', async (t) => {
 
 test('Rate limiting', async (t) => {
   let count = -1;
-  let startedEntries = 0;
-  let doneEntries = 0;
-  const poolSize = 2;
-  const entries = 10;
+  const poolSize = 5;
+  const entries = 50;
 
-  const desiredRateHz = 1; // 1 per seconds
+  const desiredRateHz = 50; // 10 per seconds
 
   const startTime = Date.now();
 
@@ -133,15 +131,14 @@ test('Rate limiting', async (t) => {
     if (id === entries) return false;
     if (id > entries) throw new Error('next() called too much');
     return (async function p() {
-      startedEntries++;
-      // on the 5th promise throw an Error right away
       await new Promise((r) => { setTimeout(r, 50) });
-      doneEntries++;
     });
   }
-  await PromisePoolRL(next, poolSize, {rateHz: desiredRateHz}); 
-
+  const result = await PromisePoolRL(next, poolSize, {rateHz: desiredRateHz}); 
   const endTime = Date.now();
-  const calculateRate = doneEntries * 1000 / (endTime - startTime);
-  console.log({calculateRate});
+  const calculatedRate = count * 1000 / (endTime - startTime);
+  if (calculatedRate * 0.99 > result.averageRateHz || calculatedRate * 1.01 < result.averageRateHz) 
+    throw new Error(`result.averageRateHz ${result.averageRateHz} should be approx 1% of calculatedRate ${calculatedRate}`);
+  if (desiredRateHz * 0.9 > result.averageRateHz || desiredRateHz * 1.1 < result.averageRateHz) 
+    throw new Error(`result.averageRateHz ${result.averageRateHz} should be approx 10% of desiredRateHz ${desiredRateHz}`);
 });
