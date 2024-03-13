@@ -1,6 +1,6 @@
 # Promise pool with rate limiting for Node.js
 
-![tests](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+![tests](https://github.com/github/docs/actions/workflows/test.js.yml/badge.svg)
 
 Super simple, depency less
 
