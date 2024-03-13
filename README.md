@@ -1,5 +1,7 @@
 # Promise pool with rate limiting for Node.js
 
+![tests](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+
 Super simple, depency less
 
 When you need to execute a very large number of Promise to be created "on the fly", but you must comply to maximum concurent and and/or maximum call rate.
