@@ -1,12 +1,12 @@
 # Promise pool with rate limiting for Node.js
 
-![tests](https://github.com/perki/promise-pool-rate-limited/actions/workflows/test.js.yml/badge.svg)
+![tests](https://github.com/perki/promise-pool-rate-limited/actions/workflows/test.js.yml/badge.svg) [![npm](https://img.shields.io/npm/v/promise-pool-rate-limited)](https://www.npmjs.com/package/promise-pool-rate-limited) [![License](https://img.shields.io/badge/License-BSD_3--Clause-blue.svg)](https://opensource.org/licenses/BSD-3-Clause)
 
-Super simple, depency less
+Super simple, depency-less
 
-When you need to execute a very large number of Promise to be created "on the fly", but you must comply to maximum concurent and and/or maximum call rate.
+When you need to execute a very large number of Promises to be created "on the fly", but you must comply to maximum concurrent and and/or maximum call rate.
 
-This is mostly usefull when  
+This is mostly useful when  
 
 What you need at least: 
 
@@ -14,12 +14,12 @@ What you need at least:
 - a `maxConcurent`value 
 
 Options are 
-- `rateHz` the maximum number of call to do per seconds
+- `rateHz` the maximum number of calls per seconds
 - `onError` to eventually catch error and the faulty promise
 
 ### Simple Exemple
 
-Fetch items with id from 1 to 100000 from an API with a maximum concurent calls of 10;
+Fetch items with id from 1 to 100000 from an API with a maximum concurrent calls of 10;
 ```javascript
 const PromisePoolRL = require('promise-pool-rate-limited');
 
@@ -32,7 +32,7 @@ async getAll() {
     if (i === 100000) return false; // done;
     i++;
     return async function() {
-      const content =(await (await fetch(`https://api.com/item/${id}`).text());
+      const content =(await (await fetch(`https://api.co/${id}`).text());
       // ... do something with the content
     }
   }
@@ -41,13 +41,11 @@ async getAll() {
 getAll();
 ```
 
-
-
 ### Exemple with rate limiting 
 
 Fetch items with id from 1 to 100000 from an API with 
 
-- a maximum concurent calls of 10 
+- a maximum concurrent calls of 10 
 - a maximum of 20 calls per seconds
 
 ```javascript
@@ -62,7 +60,7 @@ async getAll() {
     if (i === 100000) return false; // done;
     i++;
     return async function() {
-      const content =(await (await fetch(`https://api.com/item/${id}`).text());
+      const content=(await (await fetch(`https://api.co/${id}`).text());
       // ... do something with the content
     }
   }
@@ -75,9 +73,9 @@ getAll();
 
 ### Exemple with error catching
 
-By default if one of the promise call fails, the sequence stops and the error is thrown. 
+By default if one of the promise calls fails, the sequence stops and the error is thrown. 
 
-To catch intermediate errors and continue or not you can provide an `onError()` callback
+To catch intermediate errors and continue or not you can provide a`onError()` callback.
 
 ```javascript
 const PromisePoolRL = require('promise-pool-rate-limited');
@@ -89,8 +87,10 @@ async getAll() {
   
   function onError(err, promise, intermediateResult) {
     gotError++;
-    if (promise.id !== 5) throw new Error('Expected to receive the failing promise');
-    if (err.message !== 'Failing on 6th Promise') throw new Error(e);
+    if (promise.id !== 5) 
+      throw new Error('Expected to receive the failing promise');
+    if (err.message !== 'Failing on 6th Promise') 
+      throw new Error(e);
     return true; // you can also return false to stop
   }
 
@@ -102,7 +102,7 @@ async getAll() {
       if (i === 5) {
         throw new Error('Failing on 6th Promise');
       } else { // wait 50ms
-         const content =(await (await fetch(`https://api.com/item/${id}`).text());
+        const content =(await (await fetch(`https://api.co/${id}`).text());
       }
     };
     p.id = i; // here we keep the ID to identify the promise that failed.
@@ -113,13 +113,10 @@ async getAll() {
 getAll();
 ```
 
-
-
-### 
-
 ## Contributing 
 
 Contributions are welcome 
+- Someone to make a typeScript interface ? 
 
 ## License
 
