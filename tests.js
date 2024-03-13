@@ -116,3 +116,33 @@ test('Reject catching Error and continuing', async (t) => {
   if (startedEntries != entries) throw new Error(`Expected startedEntries: ${startedEntries} to be equal to expectedEntries: ${entries}`)
   if (doneEntries != entries) throw new Error(`Expected doneEntries: ${doneEntries} to be equal to expectedEntries: ${entries}`)
 });
+
+test('Rate limiting', async (t) => {
+  let count = -1;
+  let startedEntries = 0;
+  let doneEntries = 0;
+  const poolSize = 2;
+  const entries = 30;
+
+  const desiredRateHz = 1; // 1 per seconds
+
+  const startTime = Date.now();
+
+
+  function next() {
+    const id = ++count;
+    if (id === entries) return false;
+    if (id > entries) throw new Error('next() called too much');
+    return (async function p() {
+      startedEntries++;
+      // on the 5th promise throw an Error right away
+      await new Promise((r) => { setTimeout(r, 50) });
+      doneEntries++;
+    });
+  }
+  await PromisePoolRL(next, poolSize, {rateHz: desiredRateHz}); 
+
+  const endTime = Date.now();
+  const calculateRate = doneEntries * 1000 / (endTime - startTime);
+  console.log({calculateRate});
+});

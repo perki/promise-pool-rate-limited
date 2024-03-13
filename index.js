@@ -1,4 +1,3 @@
-
 /**
  * 
  * @param {Function} next when called returns a Promise or false when done;
@@ -10,8 +9,16 @@
  */
 function PromisePoolRL(next, maxConcurent, options) {
   options = options || {};
+  let currentWait = 0;
+  if (options.rateHz) { // covers 0, null..  
+    currentWait = 1000 / options.rateHz; 
+  }
+  const startTime = Date.now();
+  let totalCount = 0;
 
   return new Promise((resolve, reject) => {
+
+    // keep track of rejection to avoid multiple callback
     let rejected = false;
     function gotError(err, promise) {
       if (options.onError !== undefined) {
@@ -23,28 +30,49 @@ function PromisePoolRL(next, maxConcurent, options) {
       return false;
     }
 
-    let count = 0;
+    let countConcurentCalls = 0;
     let done = false;
-    function goNext() {
+
+    function goNext(startWithDelay) {
       if (done || rejected) { 
-        if (count === 0 && ! rejected) resolve();
+        console.log({countConcurentCalls, rejected});
+        if (countConcurentCalls === 0 && ! rejected) resolve();
         return false;
       }
+
+      // get next Promise to execute and return if false
       const n = next();
       if (! n) { done = true; return false}
-      count++;
-      n().then(() => { 
-        count--; goNext()},  // resolve
-        (e) => { // error
-           if ( gotError(e, n) ) { // continue
-              count--; goNext()
-           } 
-        });
+
+      countConcurentCalls++;
+      async function nn () { // async function to be able to delay 
+
+        // --- rate limiting ---//
+        if (options.rateHz) {
+          const delay = (startWithDelay != null) ? startWithDelay : currentWait;
+          console.log({countConcurentCalls, delay, startWithDelay, currentWait});
+          await new Promise((r) => { setTimeout(r, delay) });
+        }
+        totalCount++;
+        // --- end rate limiting --//
+
+        n().then(() => { 
+          countConcurentCalls--; goNext()},  // resolve
+          (e) => { // error
+             if ( gotError(e, n) ) { // continue
+                countConcurentCalls--; goNext()
+             } 
+          });
+      };
+
+      nn();
+
       return true;
     }
-    // call goNext up to the poolSize
+
+    // start by filling up the pool 
     for (let i = 0; i <= maxConcurent; i++) {
-      if (! goNext()) break; 
+      if (! goNext(i * currentWait)) break; 
     }
   });
 }
